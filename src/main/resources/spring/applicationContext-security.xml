@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:sec="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/security
+        http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <sec:authentication-manager alias="authenticationManager">
+        <sec:authentication-provider user-service-ref="loginUserService"/>
+    </sec:authentication-manager>
+
+    <bean id="loginUserService" class="ru.saaslike.service.auth.LoginUserService"/>
+
+    <sec:http pattern="/js/**" security="none"/>
+    <sec:http pattern="/css/**" security="none"/>
+    <sec:http pattern="/images/**" security="none"/>
+
+    <sec:http auto-config="true" use-expressions="true" request-matcher="regex">
+        <sec:intercept-url pattern="/" access="permitAll"/>
+        <sec:intercept-url pattern="/login" access="permitAll"/>
+        <sec:intercept-url pattern="/do_login" access="permitAll"/>
+        <sec:intercept-url pattern="/app" access="isAuthenticated()"/>
+        <sec:intercept-url pattern="/app/" access="isAuthenticated()"/>
+        <sec:intercept-url pattern="/logout" access="isAuthenticated()" method="POST"/>
+        <sec:intercept-url pattern="/app/currentUser" access="isAuthenticated()"/>
+        <sec:intercept-url pattern="/app/allowedUrls(\?.*)?" access="isAuthenticated()"/>
+        <sec:intercept-url pattern="/app/.*" access="hasRole('ROLE_ADMIN')"/>
+
+        <sec:intercept-url pattern="/messages" access="permitAll"/>
+        <sec:intercept-url pattern="/api/.*" access="permitAll"/>
+
+        <sec:intercept-url pattern="/.*" access="denyAll"/>
+
+        <sec:session-management session-fixation-protection="none"/>
+
+        <!-- поменяем login-processing-url чтобы спрятать Spring Security -->
+        <sec:form-login
+                login-processing-url="/do_login"
+                login-page="/login"
+                username-parameter="username"
+                password-parameter="password"
+                authentication-failure-url="/login?error=true"
+                always-use-default-target="true"
+                default-target-url="/app"
+                />
+
+        <sec:logout
+                invalidate-session="true"
+                logout-success-url="/login"
+                logout-url="/logout"/>
+
+    </sec:http>
+</beans>

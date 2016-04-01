@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/mvc
+		http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/util
+		http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <context:property-placeholder location="classpath*:client-server.properties" ignore-unresolvable="true"/>
+
+    <mvc:default-servlet-handler/>
+
+    <mvc:resources mapping="/css/**" location="/css/"/>
+    <mvc:resources mapping="/images/**" location="/css/images/"/>
+    <mvc:resources mapping="/js/**" location="/js/"/>
+
+    <context:component-scan base-package="ru.saaslike.web"/>
+
+    <!--должно быть объявлено тут, чтобы работали security аннотации -->
+    <security:global-method-security pre-post-annotations="enabled"/>
+
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+        <property name="order" value="0"/>
+    </bean>
+
+    <bean id="contentNegotiationManager"
+          class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <property name="favorPathExtension" value="false"/>
+        <property name="favorParameter" value="true"/>
+        <property name="parameterName" value="mediaType"/>
+        <property name="ignoreAcceptHeader" value="false"/>
+        <property name="useJaf" value="false"/>
+        <property name="defaultContentType" value="application/json"/>
+        <property name="mediaTypes">
+            <map>
+                <entry key="javascript" value="application/javascript"/>
+            </map>
+        </property>
+    </bean>
+
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="contentNegotiationManager" ref="contentNegotiationManager"/>
+        <!-- Define the view resolvers explicitly -->
+        <property name="viewResolvers">
+            <list>
+                <ref bean="viewResolver"/>
+            </list>
+        </property>
+        <property name="order" value="1"/>
+    </bean>
+
+    <bean id="messageSource"
+          class="ru.saaslike.web.util.ExposedResourceMessageBundleSource">
+        <property name="basename">
+            <value>classpath:/locale/messages</value>
+        </property>
+        <property name="defaultEncoding" value="UTF-8"/>
+        <property name="useCodeAsDefaultMessage" value="true"/>
+    </bean>
+
+    <mvc:annotation-driven content-negotiation-manager="contentNegotiationManager">
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="objectMapper">
+                    <util:constant static-field="ru.saaslike.Constants.OBJECT_MAPPER"/>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!-- localization -->
+    <mvc:interceptors>
+        <bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+            <property name="paramName" value="lang"/>
+        </bean>
+    </mvc:interceptors>
+
+    <bean class="java.util.Locale" id="defaultMessagesLocale" factory-method="forLanguageTag">
+        <constructor-arg value="${defaultMessagesLocaleTag}"/>
+    </bean>
+
+    <bean id="localeResolver"
+          class="org.springframework.web.servlet.i18n.SessionLocaleResolver">
+        <property name="defaultLocale" ref="defaultMessagesLocale"/>
+    </bean>
+
+    <!-- Exception Resolver that resolves exceptions through @ExceptionHandler methods -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver"/>
+
+    <!--
+
+        &lt;!&ndash; caching &ndash;&gt;
+        <cache:annotation-driven cache-manager="cacheManager"/>
+
+        <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+            <property name="cacheManager" ref="ehcache"/>
+        </bean>
+
+        <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+            <property name="configLocation" value="classpath:ehcache.xml"/>
+            <property name="shared" value="true"/>
+        </bean>
+    -->
+
+</beans>

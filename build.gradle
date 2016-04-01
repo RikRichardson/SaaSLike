@@ -1,0 +1,103 @@
+apply from: "dependencies.gradle"
+
+repositories {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://repo.spring.io/release" }
+    }
+}
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "net.eikehirsch.react:gradle-react-plugin:0.3.1"
+    }
+}
+
+apply plugin: 'war'
+
+// plugin for ReactJs
+apply plugin: 'net.eikehirsch.react'
+
+dependencies {
+    compile libs.springCore
+    compile libs.springBeans
+    compile libs.springContext
+    compile libs.springWebmvc
+    compile libs.springWeb
+    compile libs.springContext
+    compile libs.springContextSupport
+    compile libs.springSecurity
+    compile libs.jacksonParent
+    compile libs.jacksonCore
+    compile libs.jacksonDatabind
+    compile libs.jacksonAnnotations
+    compile libs.jacksonXmlDatabind
+    compile libs.ehcache
+    compile libs.apacheCommons
+    compile libs.supercsv
+
+    compile libs.c3p0
+    compile libs.springJdbc
+    compile libs.springOrm
+    compile libs.postgresJdbcDriver
+    compile libs.hibernateCore
+    compile libs.hibernateEntityManager
+    compile libs.aspectjweaver
+
+    compile libs.hibernateCore
+
+    compile libs.jacksonDatabind
+    compile libs.apacheCommons
+    compile libs.apacheCommonsCodec
+    compile libs.springCC
+    compile libs.springJdbc
+    compile libs.springDataJpa
+
+    testCompile(libs.jayway) {
+        exclude group: 'org.hamcrest'
+    }
+
+    testCompile libs.springSecurityTest
+
+    providedCompile libs.servletApi
+
+    runtime libs.jstl
+}
+
+
+class NpmExec extends Exec {
+    public NpmExec() {
+        super()
+
+        String wpCommand = 'npm'
+        if (System.getProperty('os.name').toLowerCase().contains('windows')) {
+            wpCommand = 'npm.cmd'
+        }
+
+        this.setExecutable(wpCommand)
+    }
+}
+
+task installAppWebpack(type: NpmExec) {
+    workingDir = 'src/main/js/app'
+    args = ('install'.trim()).tokenize(' ')
+}
+
+task buildLogin(type: NpmExec, dependsOn: [installAppWebpack]) {
+    workingDir = 'src/main/js/app'
+    args = ('run-script build-login'.trim()).tokenize(' ')
+}
+
+task buildClientAp(type: NpmExec, dependsOn: [installAppWebpack]) {
+    workingDir = 'src/main/js/app'
+    args = ('run-script build-main'.trim()).tokenize(' ')
+}
+
+
+processResources.dependsOn buildLogin, buildClientAp

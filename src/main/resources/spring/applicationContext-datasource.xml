@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/data/jpa
+		http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <context:property-placeholder location="classpath*:db.properties" ignore-unresolvable="true"/>
+
+    <jpa:repositories base-package="ru.saaslike"/>
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="jdbcDatasource"/>
+        <property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+        <property name="loadTimeWeaver">
+            <bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
+        </property>
+
+        <property name="packagesToScan" value="ru.saaslike.**.*"/>
+        <property name="persistenceProvider" ref="hibernatePersistenceProvider"/>
+        <property name="jpaPropertyMap">
+            <map>
+                <entry key="hibernate.show_sql" value="false"/>
+                <entry key="hibernate.format_sql" value="false"/>
+                <entry key="hibernate.generate_statistics" value="false"/>
+                <entry key="hibernate.connection.autocommit" value="false"/>
+                <entry key="hibernate.connection.useUnicode" value="true"/>
+                <entry key="hibernate.connection.characterEncoding" value="UTF-8"/>
+                <entry key="hibernate.connection.charSet" value="UTF-8"/>
+                <entry key="hibernate.archive.autodetection" value="class"/>
+                <entry key="hibernate.physical_naming_strategy" value="ru.saaslike.db.ImprovedNamingStrategy" />
+                <entry key="hibernate.ddl-auto" value="${db.hibernate.auto}"/>
+                <entry key="hibernate.auto" value="${db.hibernate.auto}"/>
+                <entry key="javax.persistence.schema-generation.database.action" value="${db.create-schema-action}"/>
+                <entry key="hibernate.default_schema" value="${db.default-schema}"/>
+            </map>
+        </property>
+    </bean>
+
+    <bean id="hibernatePersistenceProvider" class="org.hibernate.jpa.HibernatePersistenceProvider"/>
+
+    <bean id="hibernateJpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+        <property name="databasePlatform" value="ru.saaslike.db.CustomPostgresSQL9Dialect"/>
+        <property name="showSql" value="false"/>
+        <property name="generateDdl" value="true"/>
+    </bean>
+
+    <bean id="jdbcDatasource"
+          class="com.mchange.v2.c3p0.ComboPooledDataSource"
+          destroy-method="close">
+
+        <property name="driverClass" value="${db.driverClassName}"/>
+        <property name="jdbcUrl" value="${db.url}"/>
+        <property name="user" value="${db.user}"/>
+        <property name="password" value="${db.password}"/>
+        <property name="maxPoolSize" value="${pool.maxPoolSize}"/>
+        <property name="minPoolSize" value="${pool.minPoolSize}"/>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+    <bean id="transactionAwareDataSource"
+          class="org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy">
+        <constructor-arg ref="jdbcDatasource"/>
+    </bean>
+
+    <bean id="transactionReqInterceptor" class="ru.saaslike.db.TransactionCheckInterceptor"/>
+
+    <aop:config>
+        <aop:pointcut id="transactionReqAdvisor" expression="bean(dsl)"/>
+        <aop:advisor advice-ref="transactionReqInterceptor" pointcut-ref="transactionReqAdvisor"/>
+    </aop:config>
+
+</beans>

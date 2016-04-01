@@ -1,0 +1,63 @@
+html {
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.main-top {
+    text-align: center;
+}
+
+.center-vertical {
+    display: table-cell;
+    vertical-align: middle
+}
+
+.center-horizontal-block {
+    display: block;
+    margin-left: auto;
+    margin-right: auto
+}
+
+.icon_home {
+    background: url("images/homepng_256.png");
+    background-size: cover;
+    width: 48px;
+    height: inherit;
+    background-repeat: no-repeat;
+
+}
+
+.error_message {
+    font-size: 12px;
+    line-height: 12px;
+    background-color: #f44336;
+    color: white;
+    padding: 10px;
+}
+
+.snackbar-error span{
+    color: #f49bcd !important;
+}
+
+/* background color for chrome auto-fill */
+.autofill-no-back input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset!important;
+}
+
+.operations-table {
+}
+
+.operations-table td.operations-table-column {
+    text-align: center;
+    overflow-x: hidden;
+}
+
+.operations-table th.operations-table-column {
+    text-align: center;
+    white-space: nowrap;
+    overflow-x: hidden;
+}
