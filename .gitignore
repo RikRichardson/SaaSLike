@@ -1,0 +1,11 @@
+.idea/*
+!/.idea/codeStyleSettings.xml
+/classes/
+*.iml
+*.ipr
+*.iws
+*.ids
+?.bat
+/.gradle/
+build/
+out/
